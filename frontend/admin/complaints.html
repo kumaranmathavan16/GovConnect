@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Complaints - Grievance Management System</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-body">
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" alt="Emblem" class="sidebar-logo">
+            <h2>Admin Portal</h2>
+        </div>
+        <ul class="nav-links">
+            <li><a href="dashboard.html"><i class="fas fa-home"></i> Home Dashboard</a></li>
+            <li><a href="complaints.html" class="active"><i class="fas fa-list"></i> All Complaints</a></li>
+            <li><a href="queue.html"><i class="fas fa-exclamation-triangle"></i> Priority Queue</a></li>
+            <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </div>
+    
+    <div class="main-content">
+        <header class="top-header">
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div class="admin-hamburger" id="admin-hamburger">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <div class="header-title">
+                    <h1>All Complaints</h1>
+                    <p>Manage and track all registered grievances</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="table-container">
+            <div class="table-controls">
+                <input type="text" id="searchBox" placeholder="Search by Ticket ID or Name..." class="search-input">
+                <select id="filterDistrict" class="filter-select">
+                    <option value="">All Districts</option>
+                    <option value="North District">North District</option>
+                    <option value="South District">South District</option>
+                    <option value="East District">East District</option>
+                    <option value="West District">West District</option>
+                    <option value="Central District">Central District</option>
+                </select>
+                <select id="filterStatus" class="filter-select">
+                    <option value="">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                </select>
+                <button class="btn-outline" onclick="exportToCSV()"><i class="fas fa-download"></i> Export CSV</button>
+            </div>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Ticket ID</th>
+                        <th>Citizen Name</th>
+                        <th>District</th>
+                        <th>Category</th>
+                        <th>Urgency</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="complaintsTableBody">
+                    <!-- Rows injected via JS -->
+                </tbody>
+            </table>
+            
+            <div class="pagination">
+                <button id="prevPage" class="btn-page">&laquo; Prev</button>
+                <span id="pageInfo">Page 1 of 1</span>
+                <button id="nextPage" class="btn-page">Next &raquo;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Modal -->
+    <div id="actionModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Update Complaint Status</h2>
+            <p>Ticket ID: <strong id="modalTicketId"></strong></p>
+            <form id="actionForm">
+                <input type="hidden" id="actionTicketId">
+                <div class="form-group">
+                    <label for="updateStatus">Status</label>
+                    <select id="updateStatus" name="status" required>
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="actionNotes">Action Taken / Notes</label>
+                    <textarea id="actionNotes" name="action_notes" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="btn-primary full-width">Update Status</button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="../js/app.js"></script>
+    <script>
+        if (!sessionStorage.getItem("admin_id")) {
+            window.location.href = "login.html";
+        }
+        document.addEventListener("DOMContentLoaded", () => {
+            loadComplaints();
+        });
+    </script>
+</body>
+</html>

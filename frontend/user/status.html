@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Complaints Status - Grievance Management System</title>
+    <meta name="description" content="Track live updates and resolution status of all registered public grievances.">
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body style="background-color: var(--bg-color);">
+    <nav class="public-nav">
+        <div class="nav-brand">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" alt="Government Emblem">
+            <h1>GovConnect</h1>
+        </div>
+        <div class="hamburger" id="mobile-menu">
+            <i class="fas fa-bars"></i>
+        </div>
+        <ul class="nav-links-public" id="nav-menu">
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="submit.html">Submit Complaint</a></li>
+            <li><a href="status.html" style="color: var(--accent-color); border-bottom: 2px solid var(--accent-color);">All Complaints Status</a></li>
+            <li><a href="../admin/login.html" class="btn-login"><i class="fas fa-lock"></i> Admin Login</a></li>
+        </ul>
+    </nav>
+
+    <div class="submit-container" style="max-width: 1000px;">
+        <div class="form-card" style="animation: fadeIn 0.5s ease-out;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2 style="font-size: 2rem;">Public Grievance Status Tracker</h2>
+                <p style="color: var(--text-secondary);">Real-time updates on all submitted complaints</p>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Ticket ID</th>
+                            <th>Citizen Name</th>
+                            <th>District</th>
+                            <th>Category</th>
+                            <th>Urgency</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="publicComplaintsTableBody">
+                        <tr><td colspan="6" style="text-align:center">Loading complaints...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            loadPublicComplaints();
+            // Refresh data automatically every 30 seconds to show live updates when admin updates status
+            setInterval(loadPublicComplaints, 30000);
+        });
+    </script>
+</body>
+</html>

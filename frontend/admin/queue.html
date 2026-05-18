@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Priority Queue - Grievance Management System</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-body">
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" alt="Emblem" class="sidebar-logo">
+            <h2>Admin Portal</h2>
+        </div>
+        <ul class="nav-links">
+            <li><a href="dashboard.html"><i class="fas fa-home"></i> Home Dashboard</a></li>
+            <li><a href="complaints.html"><i class="fas fa-list"></i> All Complaints</a></li>
+            <li><a href="queue.html" class="active"><i class="fas fa-exclamation-triangle"></i> Priority Queue</a></li>
+            <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </div>
+    
+    <div class="main-content">
+        <header class="top-header">
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div class="admin-hamburger" id="admin-hamburger">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <div class="header-title">
+                    <h1>AI Prioritized Queue</h1>
+                    <p>Complaints sorted by ML-predicted priority score</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="queue-container" id="priorityQueueContainer">
+            <!-- Cards injected via JS -->
+        </div>
+    </div>
+    
+    <script src="../js/app.js"></script>
+    <script>
+        if (!sessionStorage.getItem("admin_id")) {
+            window.location.href = "login.html";
+        }
+        document.addEventListener("DOMContentLoaded", () => {
+            loadPriorityQueue();
+        });
+    </script>
+</body>
+</html>
