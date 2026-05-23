@@ -10,10 +10,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="admin-body">
+    <div class="tricolor-bar"></div>
     <div class="sidebar">
         <div class="sidebar-header">
             <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" alt="Emblem" class="sidebar-logo">
-            <h2>Admin Portal</h2>
+            <h2>GovConnect</h2>
         </div>
         <ul class="nav-links">
             <li><a href="dashboard.html" class="active"><i class="fas fa-home"></i> Home Dashboard</a></li>
@@ -31,11 +32,11 @@
                 </div>
                 <div class="header-title">
                     <h1>Overview Dashboard</h1>
-                    <p>Welcome back, Admin</p>
+                    <p>Welcome back, GovConnect</p>
                 </div>
             </div>
             <div class="user-profile">
-                <i class="fas fa-user-circle"></i> Admin
+                <i class="fas fa-user-circle"></i> GovConnect
             </div>
         </header>
 
@@ -76,8 +77,18 @@
                 <canvas id="districtChart"></canvas>
             </div>
             <div class="chart-box">
+                <h3>Complaints by City/Town</h3>
+                <canvas id="cityChart"></canvas>
+            </div>
+            <div class="chart-box">
                 <h3>Complaints by Category</h3>
                 <canvas id="categoryChart"></canvas>
+            </div>
+            <div class="chart-box" style="display:flex; flex-direction:column; height:350px;">
+                <h3>High Complaint Regions</h3>
+                <div id="highComplaintRegionsList" style="flex:1; overflow-y:auto; margin-top:1rem; padding-right:0.5rem;">
+                    <div style="color:var(--text-secondary); text-align:center; padding:2rem;">Loading region stats...</div>
+                </div>
             </div>
             <div class="chart-box full-width">
                 <h3>Monthly Trend</h3>

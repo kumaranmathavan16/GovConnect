@@ -9,10 +9,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="admin-body">
+    <div class="tricolor-bar"></div>
     <div class="sidebar">
         <div class="sidebar-header">
             <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" alt="Emblem" class="sidebar-logo">
-            <h2>Admin Portal</h2>
+            <h2>GovConnect</h2>
         </div>
         <ul class="nav-links">
             <li><a href="dashboard.html"><i class="fas fa-home"></i> Home Dashboard</a></li>
@@ -36,15 +37,29 @@
         </header>
 
         <div class="table-container">
-            <div class="table-controls">
-                <input type="text" id="searchBox" placeholder="Search by Ticket ID or Name..." class="search-input">
+            <div class="table-controls" style="display:flex; flex-wrap:wrap; gap:0.75rem;">
+                <input type="text" id="searchBox" placeholder="Search by Ticket, Name or Keyword..." class="search-input" style="flex:1; min-width:200px;">
                 <select id="filterDistrict" class="filter-select">
                     <option value="">All Districts</option>
-                    <option value="North District">North District</option>
-                    <option value="South District">South District</option>
-                    <option value="East District">East District</option>
-                    <option value="West District">West District</option>
-                    <option value="Central District">Central District</option>
+                </select>
+                <select id="filterCity" class="filter-select" disabled>
+                    <option value="">All Cities/Towns</option>
+                </select>
+                <select id="filterCategory" class="filter-select">
+                    <option value="">All Categories</option>
+                    <option value="Water">Water Supply</option>
+                    <option value="Electricity">Electricity</option>
+                    <option value="Public Works">Public Works</option>
+                    <option value="Sanitation">Sanitation</option>
+                    <option value="Health">Health</option>
+                    <option value="Transport">Transport</option>
+                </select>
+                <select id="filterUrgency" class="filter-select">
+                    <option value="">All Urgencies</option>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Critical">Critical</option>
                 </select>
                 <select id="filterStatus" class="filter-select">
                     <option value="">All Statuses</option>
@@ -52,25 +67,30 @@
                     <option value="In Progress">In Progress</option>
                     <option value="Resolved">Resolved</option>
                 </select>
-                <button class="btn-outline" onclick="exportToCSV()"><i class="fas fa-download"></i> Export CSV</button>
+                <button id="clearFiltersBtn" class="btn-outline" style="border-radius:6px; padding:0.5rem 1rem; color: var(--danger); border-color: rgba(244, 63, 94, 0.2);"><i class="fas fa-times-circle"></i> Clear Filters</button>
+                <button class="btn-outline" onclick="exportToCSV()" style="border-radius:6px; padding:0.5rem 1rem;"><i class="fas fa-download"></i> Export CSV</button>
             </div>
             
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Ticket ID</th>
-                        <th>Citizen Name</th>
-                        <th>District</th>
-                        <th>Category</th>
-                        <th>Urgency</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="complaintsTableBody">
-                    <!-- Rows injected via JS -->
-                </tbody>
-            </table>
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Ticket ID</th>
+                            <th>Citizen Name</th>
+                            <th>District</th>
+                            <th>City/Town</th>
+                            <th>Specific Location</th>
+                            <th>Category</th>
+                            <th>Urgency</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="complaintsTableBody">
+                        <!-- Rows injected via JS -->
+                    </tbody>
+                </table>
+            </div>
             
             <div class="pagination">
                 <button id="prevPage" class="btn-page">&laquo; Prev</button>
@@ -80,16 +100,20 @@
         </div>
     </div>
 
-    <!-- Action Modal -->
+    <!-- Action Modal & Details View -->
     <div id="actionModal" class="modal hidden">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width:600px; max-height:90vh; overflow-y:auto; border-radius:12px; box-shadow:var(--shadow-lg);">
             <span class="close-modal">&times;</span>
-            <h2>Update Complaint Status</h2>
-            <p>Ticket ID: <strong id="modalTicketId"></strong></p>
+            <h2 style="margin-bottom:1rem; color:var(--primary-color);">Grievance Details & Action</h2>
+            <p style="margin-bottom:1rem; font-size:0.95rem; color:var(--text-secondary);">Ticket ID: <strong id="modalTicketId" style="color:var(--primary-color);"></strong></p>
+            
+            <!-- Dynamic detailed information injected via JS -->
+            <div id="modalComplaintDetails"></div>
+            
             <form id="actionForm">
                 <input type="hidden" id="actionTicketId">
                 <div class="form-group">
-                    <label for="updateStatus">Status</label>
+                    <label for="updateStatus" style="font-weight:600;">Update Status</label>
                     <select id="updateStatus" name="status" required>
                         <option value="Pending">Pending</option>
                         <option value="In Progress">In Progress</option>
@@ -97,10 +121,10 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="actionNotes">Action Taken / Notes</label>
-                    <textarea id="actionNotes" name="action_notes" rows="4" required></textarea>
+                    <label for="actionNotes" style="font-weight:600;">Action Taken / Resolution Notes</label>
+                    <textarea id="actionNotes" name="action_notes" rows="3" required placeholder="Provide details of actions taken..." style="font-family:inherit;"></textarea>
                 </div>
-                <button type="submit" class="btn-primary full-width">Update Status</button>
+                <button type="submit" class="btn-primary full-width" style="border-radius:6px;">Submit Update</button>
             </form>
         </div>
     </div>

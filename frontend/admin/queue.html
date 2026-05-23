@@ -9,10 +9,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="admin-body">
+    <div class="tricolor-bar"></div>
     <div class="sidebar">
         <div class="sidebar-header">
             <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" alt="Emblem" class="sidebar-logo">
-            <h2>Admin Portal</h2>
+            <h2>GovConnect</h2>
         </div>
         <ul class="nav-links">
             <li><a href="dashboard.html"><i class="fas fa-home"></i> Home Dashboard</a></li>
@@ -37,6 +38,35 @@
 
         <div class="queue-container" id="priorityQueueContainer">
             <!-- Cards injected via JS -->
+        </div>
+    </div>
+
+    <!-- Action Modal & Details View -->
+    <div id="actionModal" class="modal hidden">
+        <div class="modal-content" style="max-width:600px; max-height:90vh; overflow-y:auto; border-radius:12px; box-shadow:var(--shadow-lg);">
+            <span class="close-modal">&times;</span>
+            <h2 style="margin-bottom:1rem; color:var(--primary-color);">Grievance Details & Action</h2>
+            <p style="margin-bottom:1rem; font-size:0.95rem; color:var(--text-secondary);">Ticket ID: <strong id="modalTicketId" style="color:var(--primary-color);"></strong></p>
+            
+            <!-- Dynamic detailed information injected via JS -->
+            <div id="modalComplaintDetails"></div>
+            
+            <form id="actionForm">
+                <input type="hidden" id="actionTicketId">
+                <div class="form-group">
+                    <label for="updateStatus" style="font-weight:600;">Update Status</label>
+                    <select id="updateStatus" name="status" required>
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="actionNotes" style="font-weight:600;">Action Taken / Resolution Notes</label>
+                    <textarea id="actionNotes" name="action_notes" rows="3" required placeholder="Provide details of actions taken..." style="font-family:inherit;"></textarea>
+                </div>
+                <button type="submit" class="btn-primary full-width" style="border-radius:6px;">Submit Update</button>
+            </form>
         </div>
     </div>
     

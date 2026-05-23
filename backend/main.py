@@ -13,16 +13,21 @@ from fastapi.staticfiles import StaticFiles
 # Create DB tables
 models.Base.metadata.create_all(bind=engine)
 
-# Dynamic DB migration to support 'city' column
+# Dynamic DB migration to support 'city' and 'specific_location' columns
 try:
     with engine.connect() as conn:
         from sqlalchemy import text
-        result = conn.execute(text("SHOW COLUMNS FROM complaints LIKE 'city'"))
-        if not result.fetchone():
+        result_city = conn.execute(text("SHOW COLUMNS FROM complaints LIKE 'city'"))
+        if not result_city.fetchone():
             conn.execute(text("ALTER TABLE complaints ADD COLUMN city VARCHAR(100) AFTER district"))
             conn.commit()
+            
+        result_loc = conn.execute(text("SHOW COLUMNS FROM complaints LIKE 'specific_location'"))
+        if not result_loc.fetchone():
+            conn.execute(text("ALTER TABLE complaints ADD COLUMN specific_location VARCHAR(255) AFTER city"))
+            conn.commit()
 except Exception as e:
-    print("Database migration for city column failed or already executed:", e)
+    print("Database migration failed or already executed:", e)
 
 app = FastAPI(title="AI Citizen Grievance Management System")
 
@@ -61,7 +66,8 @@ async def submit_complaint(
     citizen_name: str = Form(...),
     phone_number: str = Form(...),
     district: str = Form(...),
-    location: str = Form(...),
+    city: str = Form(...),
+    specific_location: str = Form(...),
     description: str = Form(...),
     evidence: UploadFile = File(None),
     db: Session = Depends(get_db)
@@ -84,7 +90,9 @@ async def submit_complaint(
         citizen_name=citizen_name,
         phone_number=phone_number,
         district=district,
-        location=location,
+        city=city,
+        specific_location=specific_location,
+        location=specific_location,
         description=description,
         evidence_path=evidence_path,
         predicted_category=ml_results["category"],
@@ -122,6 +130,22 @@ def get_district_analytics(db: Session = Depends(get_db)):
     from sqlalchemy import func
     results = db.query(models.Complaint.district, func.count(models.Complaint.ticket_id)).group_by(models.Complaint.district).all()
     return [{"district": r[0], "count": r[1]} for r in results]
+
+@app.get("/api/analytics/city")
+def get_city_analytics(db: Session = Depends(get_db)):
+    from sqlalchemy import func
+    results = db.query(models.Complaint.city, func.count(models.Complaint.ticket_id)).filter(models.Complaint.city != None).group_by(models.Complaint.city).all()
+    return [{"city": r[0], "count": r[1]} for r in results]
+
+@app.get("/api/analytics/high-regions")
+def get_high_regions(db: Session = Depends(get_db)):
+    from sqlalchemy import func
+    results = db.query(models.Complaint.district, models.Complaint.city, func.count(models.Complaint.ticket_id))\
+        .filter(models.Complaint.district != None, models.Complaint.city != None)\
+        .group_by(models.Complaint.district, models.Complaint.city)\
+        .order_by(func.count(models.Complaint.ticket_id).desc())\
+        .limit(5).all()
+    return [{"district": r[0], "city": r[1], "count": r[2]} for r in results]
 
 @app.get("/api/analytics/category")
 def get_category_analytics(db: Session = Depends(get_db)):

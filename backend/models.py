@@ -22,6 +22,7 @@ class Complaint(Base):
     phone_number = Column(String(20))
     district = Column(String(100))
     city = Column(String(100), nullable=True)
+    specific_location = Column(String(255), nullable=True)
     location = Column(String(255))
     description = Column(Text)
     evidence_path = Column(String(255), nullable=True)

@@ -1,5 +1,47 @@
 const API_BASE = "http://localhost:8000/api";
 
+// --- Tamil Nadu Complete Location Map ---
+const TAMIL_NADU_LOCATIONS = {
+    "Ariyalur": ["Ariyalur", "Jayankondam", "Sendurai", "Tirumanur"],
+    "Chengalpattu": ["Chengalpattu", "Tambaram", "Pallavaram", "Chromepet", "Madhuranthakam"],
+    "Chennai": ["T Nagar", "Adyar", "Velachery", "Anna Nagar", "Mylapore", "Royapettah", "Nungambakkam", "Tambaram"],
+    "Coimbatore": ["Gandhipuram", "RS Puram", "Peelamedu", "Pollachi", "Mettupalayam", "Singanallur"],
+    "Cuddalore": ["Cuddalore", "Chidambaram", "Panruti", "Neyveli", "Virudhachalam"],
+    "Dharmapuri": ["Dharmapuri", "Harur", "Palacode", "Pennagaram"],
+    "Dindigul": ["Dindigul", "Palani", "Kodaikanal", "Oddanchatram", "Natham"],
+    "Erode": ["Erode", "Gobichettipalayam", "Bhavani", "Perundurai", "Sathy"],
+    "Kallakurichi": ["Kallakurichi", "Sankarapuram", "Ulundurpet", "Chinnasalem"],
+    "Kanchipuram": ["Kanchipuram", "Sriperumbudur", "Walajabad", "Kundrathur"],
+    "Kanyakumari": ["Nagercoil", "Kanyakumari", "Marthandam", "Thuckalay", "Colachel"],
+    "Karur": ["Karur", "Kulithalai", "Aravakurichi", "Pallapatti"],
+    "Krishnagiri": ["Krishnagiri", "Hosur", "Denkanikottai", "Pochampalli", "Uthangarai"],
+    "Madurai": ["Anna Nagar", "KK Nagar", "Melur", "Usilampatti", "Thirumangalam", "Tallakulam"],
+    "Mayiladuthurai": ["Mayiladuthurai", "Sirkazhi", "Tharangambadi", "Kuthalam"],
+    "Nagapattinam": ["Nagapattinam", "Velankanni", "Vedaranyam", "Thirukkuvalai"],
+    "Namakkal": ["Namakkal", "Rasipuram", "Tiruchengode", "Komarapalayam", "Sendamangalam"],
+    "Nilgiris": ["Ooty", "Coonoor", "Kotagiri", "Gudalur"],
+    "Perambalur": ["Perambalur", "Veppanthattai", "Alathur", "Kunnam"],
+    "Pudukkottai": ["Pudukkottai", "Aranthangi", "Alangudi", "Illuppur"],
+    "Ramanathapuram": ["Ramanathapuram", "Rameswaram", "Paramakudi", "Keezhakarai", "Tiruvadanai"],
+    "Ranipet": ["Ranipet", "Arakkonam", "Arcot", "Walajapet", "Sholinghur"],
+    "Salem": ["Salem", "Attur", "Mettur", "Omalur", "Yercaud", "Elampillai"],
+    "Sivaganga": ["Sivaganga", "Karaikudi", "Devakottai", "Manamadurai", "Tiruppattur"],
+    "Tenkasi": ["Tenkasi", "Sankarankovil", "Kadayanallur", "Shenkottai", "Alangulam"],
+    "Thanjavur": ["Thanjavur", "Kumbakonam", "Pattukkottai", "Orathanadu", "Thiruvaiyaru"],
+    "Theni": ["Theni", "Bodinayakanur", "Cumbum", "Periyakulam", "Andipatti"],
+    "Thoothukudi": ["Thoothukudi", "Kovilpatti", "Tiruchendur", "Kayalpattinam", "Eral"],
+    "Tiruchirappalli": ["Srirangam", "Trichy", "Thiruverumbur", "Lalgudi", "Manapparai", "Thuraiyur"],
+    "Tirunelveli": ["Tirunelveli", "Palayamkottai", "Ambasamudram", "Nanguneri", "Valliyur"],
+    "Tirupathur": ["Tirupathur", "Vaniyambadi", "Ambur", "Natrampalli"],
+    "Tiruppur": ["Tiruppur", "Dharapuram", "Palladam", "Udusalpet", "Avinashi", "Kangeyam"],
+    "Tiruvallur": ["Tiruvallur", "Avadi", "Ambattur", "Ponneri", "Gummidipoondi"],
+    "Tiruvannamalai": ["Tiruvannamalai", "Arani", "Cheyyar", "Polur", "Chengam"],
+    "Tiruvarur": ["Tiruvarur", "Mannargudi", "Thiruthuraipoondi", "Nannilam", "Kudavasal"],
+    "Vellore": ["Vellore", "Katpadi", "Gudiyatham", "Pernambut"],
+    "Viluppuram": ["Viluppuram", "Tindivanam", "Gingee", "Vikravandi", "Marakkanam"],
+    "Virudhunagar": ["Sivakasi", "Rajapalayam", "Sattur", "Srivilliputhur", "Virudhunagar", "Aruppukkottai"]
+};
+
 // --- Mobile Navigation ---
 const mobileMenuBtn = document.getElementById('mobile-menu');
 const navMenu = document.getElementById('nav-menu');
@@ -72,11 +114,70 @@ if (logoutBtn) {
     });
 }
 
+// --- Dynamic Dropdown for Submit Form ---
+document.addEventListener("DOMContentLoaded", () => {
+    const districtSelect = document.getElementById("district");
+    const citySelect = document.getElementById("city");
+    
+    if (districtSelect && citySelect) {
+        districtSelect.addEventListener("change", () => {
+            const district = districtSelect.value;
+            citySelect.innerHTML = '<option value="">Select City/Town</option>';
+            
+            if (district && TAMIL_NADU_LOCATIONS[district]) {
+                citySelect.disabled = false;
+                TAMIL_NADU_LOCATIONS[district].forEach(city => {
+                    const opt = document.createElement("option");
+                    opt.value = city;
+                    opt.textContent = city;
+                    citySelect.appendChild(opt);
+                });
+            } else {
+                citySelect.disabled = true;
+            }
+        });
+    }
+
+    // Custom File Upload Dynamic Visual Feedback
+    const fileInput = document.getElementById("evidence");
+    const uploadContainer = document.getElementById("fileUploadContainer");
+    const uploadLabel = document.getElementById("fileUploadLabel");
+    const uploadSubtext = document.getElementById("fileUploadSubtext");
+    
+    if (fileInput && uploadContainer && uploadLabel && uploadSubtext) {
+        fileInput.addEventListener("change", () => {
+            if (fileInput.files && fileInput.files.length > 0) {
+                const fileName = fileInput.files[0].name;
+                uploadContainer.classList.add("file-uploaded-state");
+                uploadLabel.innerHTML = `<i class="fas fa-paperclip"></i> ${fileName}`;
+                uploadSubtext.innerHTML = '<i class="fas fa-check-circle"></i> File selected successfully (Click to replace)';
+            } else {
+                uploadContainer.classList.remove("file-uploaded-state");
+                uploadLabel.innerHTML = 'Upload Evidence (Image/PDF)';
+                uploadSubtext.innerHTML = 'Optional - Drag and drop or click to upload';
+            }
+        });
+    }
+});
+
 // --- Citizen Submission ---
 const complaintForm = document.getElementById('complaintForm');
 if (complaintForm) {
     complaintForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        // Form validation for phone number alone (exactly 10 digits starting with 6-9)
+        const phoneInput = document.getElementById('phone_number');
+        if (phoneInput) {
+            const phoneValue = phoneInput.value.trim();
+            const phoneRegex = /^[6-9]\d{9}$/;
+            if (!phoneRegex.test(phoneValue)) {
+                alert('Please enter a valid 10-digit phone number starting with 6, 7, 8, or 9.');
+                phoneInput.focus();
+                return;
+            }
+        }
+
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.textContent = 'Submitting...';
         submitBtn.disabled = true;
@@ -151,7 +252,10 @@ async function loadCharts() {
                         borderWidth: 1
                     }]
                 },
-                options: { responsive: true }
+                options: { 
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
             });
         }
 
@@ -173,6 +277,61 @@ async function loadCharts() {
                 },
                 options: { responsive: true, maintainAspectRatio: false }
             });
+        }
+
+        // City-wise Chart
+        const cityRes = await fetch(`${API_BASE}/analytics/city`);
+        const cityData = await cityRes.json();
+        const cityCtx = document.getElementById('cityChart');
+        if (cityCtx) {
+            new Chart(cityCtx, {
+                type: 'bar',
+                data: {
+                    labels: cityData.map(c => c.city),
+                    datasets: [{
+                        label: 'Complaints',
+                        data: cityData.map(c => c.count),
+                        backgroundColor: 'rgba(124, 58, 237, 0.7)',
+                        borderColor: 'rgba(124, 58, 237, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // High Complaint Regions list
+        const regionsRes = await fetch(`${API_BASE}/analytics/high-regions`);
+        const regionsData = await regionsRes.json();
+        const regionsList = document.getElementById('highComplaintRegionsList');
+        if (regionsList) {
+            regionsList.innerHTML = '';
+            if (regionsData.length === 0) {
+                regionsList.innerHTML = '<div style="color:var(--text-secondary); text-align:center; padding:1.5rem;">No region statistics available yet.</div>';
+            } else {
+                regionsData.forEach(r => {
+                    const item = document.createElement('div');
+                    item.className = 'region-item';
+                    item.style = 'display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:#f8fafc; border-radius:8px; border-left:4px solid var(--accent-color); margin-bottom:0.75rem; box-shadow:var(--shadow-sm);';
+                    item.innerHTML = `
+                        <div>
+                            <strong style="color:var(--text-primary); font-size:0.95rem;">${r.city}</strong>
+                            <span style="color:var(--text-secondary); font-size:0.8rem; margin-left:0.5rem;">(${r.district} Dist)</span>
+                        </div>
+                        <span class="badge critical" style="font-weight:600; font-size:0.75rem;">${r.count} Grievances</span>
+                    `;
+                    regionsList.appendChild(item);
+                });
+            }
         }
 
         // Trend Chart
@@ -213,25 +372,84 @@ async function loadComplaints() {
         // Setup filters
         const searchBox = document.getElementById('searchBox');
         const filterDistrict = document.getElementById('filterDistrict');
+        const filterCity = document.getElementById('filterCity');
+        const filterUrgency = document.getElementById('filterUrgency');
+        const filterCategory = document.getElementById('filterCategory');
         const filterStatus = document.getElementById('filterStatus');
         
+        // Populate districts in filters dynamically
+        if (filterDistrict) {
+            filterDistrict.innerHTML = '<option value="">All Districts</option>';
+            Object.keys(TAMIL_NADU_LOCATIONS).sort().forEach(dist => {
+                const opt = document.createElement('option');
+                opt.value = dist;
+                opt.textContent = dist;
+                filterDistrict.appendChild(opt);
+            });
+            
+            filterDistrict.addEventListener('change', () => {
+                const dist = filterDistrict.value;
+                if (filterCity) {
+                    filterCity.innerHTML = '<option value="">All Cities/Towns</option>';
+                    if (dist && TAMIL_NADU_LOCATIONS[dist]) {
+                        filterCity.disabled = false;
+                        TAMIL_NADU_LOCATIONS[dist].forEach(city => {
+                            const opt = document.createElement('option');
+                            opt.value = city;
+                            opt.textContent = city;
+                            filterCity.appendChild(opt);
+                        });
+                    } else {
+                        filterCity.disabled = true;
+                    }
+                }
+                filterData();
+            });
+        }
+        
         const filterData = () => {
-            const searchTerm = searchBox.value.toLowerCase();
-            const district = filterDistrict.value;
-            const status = filterStatus.value;
+            const searchTerm = searchBox ? searchBox.value.toLowerCase() : '';
+            const district = filterDistrict ? filterDistrict.value : '';
+            const city = filterCity ? filterCity.value : '';
+            const urgency = filterUrgency ? filterUrgency.value : '';
+            const category = filterCategory ? filterCategory.value : '';
+            const status = filterStatus ? filterStatus.value : '';
             
             const filtered = allComplaints.filter(c => {
-                const matchSearch = c.ticket_id.toLowerCase().includes(searchTerm) || c.citizen_name.toLowerCase().includes(searchTerm);
+                const matchSearch = c.ticket_id.toLowerCase().includes(searchTerm) || 
+                                    c.citizen_name.toLowerCase().includes(searchTerm) ||
+                                    (c.description || '').toLowerCase().includes(searchTerm);
                 const matchDist = district ? c.district === district : true;
+                const matchCity = city ? c.city === city : true;
+                const matchUrgency = urgency ? c.urgency_level === urgency : true;
+                const matchCategory = category ? (c.predicted_category || '').includes(category) : true;
                 const matchStatus = status ? c.status === status : true;
-                return matchSearch && matchDist && matchStatus;
+                return matchSearch && matchDist && matchCity && matchUrgency && matchCategory && matchStatus;
             });
             renderComplaints(filtered);
         };
         
         if(searchBox) searchBox.addEventListener('input', filterData);
-        if(filterDistrict) filterDistrict.addEventListener('change', filterData);
+        if(filterCity) filterCity.addEventListener('change', filterData);
+        if(filterUrgency) filterUrgency.addEventListener('change', filterData);
+        if(filterCategory) filterCategory.addEventListener('change', filterData);
         if(filterStatus) filterStatus.addEventListener('change', filterData);
+        
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', () => {
+                if (searchBox) searchBox.value = '';
+                if (filterDistrict) filterDistrict.value = '';
+                if (filterCity) {
+                    filterCity.innerHTML = '<option value="">All Cities/Towns</option>';
+                    filterCity.disabled = true;
+                }
+                if (filterUrgency) filterUrgency.value = '';
+                if (filterCategory) filterCategory.value = '';
+                if (filterStatus) filterStatus.value = '';
+                filterData();
+            });
+        }
         
     } catch (error) {
         console.error('Error loading complaints:', error);
@@ -240,6 +458,156 @@ async function loadComplaints() {
 
 function renderComplaints(data) {
     const tbody = document.getElementById('complaintsTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center">No complaints found.</td></tr>';
+        return;
+    }
+    
+    data.forEach(c => {
+        const tr = document.createElement('tr');
+        
+        const urgencyClass = c.urgency_level.toLowerCase();
+        const statusClass = c.status.toLowerCase().replace(' ', '-');
+        
+        tr.innerHTML = `
+            <td><strong>${c.ticket_id}</strong></td>
+            <td>${c.citizen_name}</td>
+            <td>${c.district || '-'}</td>
+            <td>${c.city || '-'}</td>
+            <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${c.specific_location || c.location || '-'}">${c.specific_location || c.location || '-'}</td>
+            <td>${c.predicted_category}</td>
+            <td><span class="badge ${urgencyClass}">${c.urgency_level}</span></td>
+            <td><span class="badge ${statusClass}">${c.status}</span></td>
+            <td>
+                <button class="btn-outline" onclick="openActionModal('${c.ticket_id}')" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-radius:4px;">
+                    View & Action
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// --- Public Status ---
+let publicComplaints = [];
+let publicFiltersInitialized = false;
+
+async function loadPublicComplaints() {
+    try {
+        const response = await fetch(`${API_BASE}/complaints`);
+        publicComplaints = await response.json();
+        
+        const tbody = document.getElementById('publicComplaintsTableBody');
+        if (!tbody) return;
+        
+        if (!publicFiltersInitialized) {
+            setupPublicFilters();
+            publicFiltersInitialized = true;
+        }
+        
+        filterPublicData();
+        
+    } catch (error) {
+        console.error('Error loading public complaints:', error);
+    }
+}
+
+function setupPublicFilters() {
+    const searchBox = document.getElementById('searchBox');
+    const filterDistrict = document.getElementById('filterDistrict');
+    const filterCity = document.getElementById('filterCity');
+    const filterUrgency = document.getElementById('filterUrgency');
+    const filterCategory = document.getElementById('filterCategory');
+    const filterStatus = document.getElementById('filterStatus');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    
+    if (filterDistrict) {
+        filterDistrict.innerHTML = '<option value="">All Districts</option>';
+        Object.keys(TAMIL_NADU_LOCATIONS).sort().forEach(dist => {
+            const opt = document.createElement('option');
+            opt.value = dist;
+            opt.textContent = dist;
+            filterDistrict.appendChild(opt);
+        });
+        
+        filterDistrict.addEventListener('change', () => {
+            const dist = filterDistrict.value;
+            if (filterCity) {
+                filterCity.innerHTML = '<option value="">All Cities/Towns</option>';
+                if (dist && TAMIL_NADU_LOCATIONS[dist]) {
+                    filterCity.disabled = false;
+                    TAMIL_NADU_LOCATIONS[dist].forEach(city => {
+                        const opt = document.createElement('option');
+                        opt.value = city;
+                        opt.textContent = city;
+                        filterCity.appendChild(opt);
+                    });
+                } else {
+                    filterCity.disabled = true;
+                }
+            }
+            filterPublicData();
+        });
+    }
+    
+    if (searchBox) searchBox.addEventListener('input', filterPublicData);
+    if (filterCity) filterCity.addEventListener('change', filterPublicData);
+    if (filterUrgency) filterUrgency.addEventListener('change', filterPublicData);
+    if (filterCategory) filterCategory.addEventListener('change', filterPublicData);
+    if (filterStatus) filterStatus.addEventListener('change', filterPublicData);
+    
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', () => {
+            if (searchBox) searchBox.value = '';
+            if (filterDistrict) filterDistrict.value = '';
+            if (filterCity) {
+                filterCity.innerHTML = '<option value="">All Cities/Towns</option>';
+                filterCity.disabled = true;
+            }
+            if (filterUrgency) filterUrgency.value = '';
+            if (filterCategory) filterCategory.value = '';
+            if (filterStatus) filterStatus.value = '';
+            filterPublicData();
+        });
+    }
+}
+
+function filterPublicData() {
+    const searchBox = document.getElementById('searchBox');
+    const filterDistrict = document.getElementById('filterDistrict');
+    const filterCity = document.getElementById('filterCity');
+    const filterUrgency = document.getElementById('filterUrgency');
+    const filterCategory = document.getElementById('filterCategory');
+    const filterStatus = document.getElementById('filterStatus');
+    
+    const searchTerm = searchBox ? searchBox.value.toLowerCase() : '';
+    const district = filterDistrict ? filterDistrict.value : '';
+    const city = filterCity ? filterCity.value : '';
+    const urgency = filterUrgency ? filterUrgency.value : '';
+    const category = filterCategory ? filterCategory.value : '';
+    const status = filterStatus ? filterStatus.value : '';
+    
+    const filtered = publicComplaints.filter(c => {
+        const matchSearch = c.ticket_id.toLowerCase().includes(searchTerm) || 
+                            c.citizen_name.toLowerCase().includes(searchTerm) ||
+                            (c.description || '').toLowerCase().includes(searchTerm);
+        const matchDist = district ? c.district === district : true;
+        const matchCity = city ? c.city === city : true;
+        const matchUrgency = urgency ? c.urgency_level === urgency : true;
+        const matchCategory = category ? (c.predicted_category || '').includes(category) : true;
+        const matchStatus = status ? c.status === status : true;
+        return matchSearch && matchDist && matchCity && matchUrgency && matchCategory && matchStatus;
+    });
+    
+    renderPublicComplaintsTable(filtered);
+}
+
+function renderPublicComplaintsTable(data) {
+    const tbody = document.getElementById('publicComplaintsTableBody');
     if (!tbody) return;
     
     tbody.innerHTML = '';
@@ -255,71 +623,30 @@ function renderComplaints(data) {
         const urgencyClass = c.urgency_level.toLowerCase();
         const statusClass = c.status.toLowerCase().replace(' ', '-');
         
+        // Masking name slightly for privacy in public view
+        const maskedName = c.citizen_name.substring(0, 2) + "***" + c.citizen_name.substring(c.citizen_name.length - 1);
+        
         tr.innerHTML = `
             <td><strong>${c.ticket_id}</strong></td>
-            <td>${c.citizen_name}</td>
-            <td>${c.district}</td>
+            <td>${maskedName}</td>
+            <td>${c.district || '-'}</td>
+            <td>${c.city || '-'}</td>
             <td>${c.predicted_category}</td>
             <td><span class="badge ${urgencyClass}">${c.urgency_level}</span></td>
             <td><span class="badge ${statusClass}">${c.status}</span></td>
-            <td>
-                <button class="btn-outline" onclick="openActionModal('${c.ticket_id}', '${c.status}')" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
-                    Update
-                </button>
-            </td>
         `;
         tbody.appendChild(tr);
     });
 }
 
-// --- Public Status ---
-async function loadPublicComplaints() {
-    try {
-        const response = await fetch(`${API_BASE}/complaints`);
-        const data = await response.json();
-        
-        const tbody = document.getElementById('publicComplaintsTableBody');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-        
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">No complaints found.</td></tr>';
-            return;
-        }
-        
-        data.forEach(c => {
-            const tr = document.createElement('tr');
-            
-            const urgencyClass = c.urgency_level.toLowerCase();
-            const statusClass = c.status.toLowerCase().replace(' ', '-');
-            
-            // Masking name slightly for privacy in public view
-            const maskedName = c.citizen_name.substring(0, 2) + "***" + c.citizen_name.substring(c.citizen_name.length - 1);
-            
-            tr.innerHTML = `
-                <td><strong>${c.ticket_id}</strong></td>
-                <td>${maskedName}</td>
-                <td>${c.district}</td>
-                <td>${c.predicted_category}</td>
-                <td><span class="badge ${urgencyClass}">${c.urgency_level}</span></td>
-                <td><span class="badge ${statusClass}">${c.status}</span></td>
-            `;
-            tbody.appendChild(tr);
-        });
-    } catch (error) {
-        console.error('Error loading public complaints:', error);
-    }
-}
-
 async function loadPriorityQueue() {
     try {
         const response = await fetch(`${API_BASE}/complaints`);
-        const data = await response.json();
+        allComplaints = await response.json();
         
         // Data is already sorted by priority_score descending from backend
         // Filter out resolved ones for queue
-        const queueData = data.filter(c => c.status !== 'Resolved');
+        const queueData = allComplaints.filter(c => c.status !== 'Resolved');
         
         const container = document.getElementById('priorityQueueContainer');
         if (!container) return;
@@ -327,7 +654,7 @@ async function loadPriorityQueue() {
         container.innerHTML = '';
         
         if (queueData.length === 0) {
-            container.innerHTML = '<p>No pending complaints in the queue.</p>';
+            container.innerHTML = '<p style="text-align:center; padding:2rem; color:var(--text-secondary);">No pending complaints in the queue.</p>';
             return;
         }
         
@@ -344,14 +671,21 @@ async function loadPriorityQueue() {
                         <strong>${c.ticket_id}</strong>
                         <span class="badge ${urgencyClass}">Score: ${c.priority_score} - ${c.urgency_level}</span>
                     </div>
-                    <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; color: #2d3748;">${c.predicted_category} - ${c.district}</h3>
-                    <p style="color: #718096; font-size: 0.9rem; margin-bottom: 0.5rem;">${c.description}</p>
-                    <div style="font-size: 0.8rem; color: #a0aec0;">
+                    <h3 style="margin-bottom: 0.6rem; font-size: 1.2rem; font-weight: 600; font-family: 'Outfit', sans-serif; color: var(--accent-light);">${c.predicted_category}</h3>
+                    
+                    <div class="location-trail" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem;">
+                        <span class="badge info" style="background:#e0f2fe; color:#0369a1; font-size:0.75rem;"><i class="fas fa-map-marker-alt"></i> District: ${c.district || '-'}</span>
+                        <span class="badge info" style="background:#f3e8ff; color:#6b21a8; font-size:0.75rem;"><i class="fas fa-city"></i> City/Town: ${c.city || '-'}</span>
+                        <span class="badge info" style="background:#fef3c7; color:#92400e; font-size:0.75rem;"><i class="fas fa-road"></i> Specific: ${c.specific_location || c.location || '-'}</span>
+                    </div>
+                    
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 0.6rem; line-height: 1.5;">${c.description}</p>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">
                         Submitted by ${c.citizen_name} on ${date} | Status: ${c.status}
                     </div>
                 </div>
-                <div style="margin-left: 2rem;">
-                    <button class="btn-primary" onclick="openActionModal('${c.ticket_id}', '${c.status}')">Take Action</button>
+                <div style="margin-left: 2rem; display:flex; align-items:center;">
+                    <button class="btn-primary" onclick="openActionModal('${c.ticket_id}')" style="border-radius:4px; white-space:nowrap;">Take Action</button>
                 </div>
             `;
             container.appendChild(card);
@@ -362,16 +696,67 @@ async function loadPriorityQueue() {
     }
 }
 
-// --- Action Modal ---
+// --- Action Modal & Details View ---
 const modal = document.getElementById('actionModal');
 const closeBtn = document.querySelector('.close-modal');
 const actionForm = document.getElementById('actionForm');
 
-function openActionModal(ticketId, currentStatus) {
+function openActionModal(ticketId) {
+    const complaint = allComplaints.find(c => c.ticket_id === ticketId);
+    if (!complaint) return;
+
     document.getElementById('modalTicketId').textContent = ticketId;
     document.getElementById('actionTicketId').value = ticketId;
-    document.getElementById('updateStatus').value = currentStatus;
+    document.getElementById('updateStatus').value = complaint.status;
     document.getElementById('actionNotes').value = '';
+    
+    // Inject detailed information into the modal
+    const detailsContainer = document.getElementById('modalComplaintDetails');
+    if (detailsContainer) {
+        const evidenceMarkup = complaint.evidence_path ? 
+            (complaint.evidence_path.endsWith('.pdf') ? 
+                `<div style="margin-top:0.25rem;"><a href="${API_BASE.replace('/api', '')}${complaint.evidence_path}" target="_blank" class="btn-outline" style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.5rem 1rem; font-size:0.85rem; border-radius:6px; text-decoration:none;"><i class="fas fa-file-pdf" style="color:var(--danger); font-size:1.1rem;"></i> View Evidence PDF</a></div>` :
+                `<div style="margin-top:0.25rem; text-align:center; width:100%;"><img src="${API_BASE.replace('/api', '')}${complaint.evidence_path}" style="max-width:100%; max-height:220px; border-radius:8px; border:1px solid var(--border-color); cursor:pointer; box-shadow:var(--shadow-sm); transition:transform 0.2s;" onclick="window.open(this.src)" title="Click to view full image" alt="Evidence" class="evidence-thumbnail"></div>`
+            ) : `<p style="color:var(--text-muted); font-size:0.9rem; font-style:italic; text-align:center; width:100%;"><i class="fas fa-info-circle"></i> No evidence uploaded</p>`;
+
+        detailsContainer.innerHTML = `
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; background:rgba(5, 13, 26, 0.4); border:1px solid rgba(255,255,255,0.06); padding:1.25rem; border-radius:10px; border-left:4px solid var(--accent-color); margin-bottom:1.5rem; animation:popIn 0.3s ease;">
+                <div>
+                    <h4 style="font-size:0.75rem; text-transform:uppercase; color:var(--accent-light); margin-bottom:0.4rem; letter-spacing:0.05em; font-family:'Outfit';">Citizen Information</h4>
+                    <p style="font-weight:600; color:var(--text-primary); font-size:1rem;"><i class="fas fa-user" style="color:var(--accent-color); margin-right:0.35rem;"></i> ${complaint.citizen_name}</p>
+                    <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.25rem;"><i class="fas fa-phone" style="color:var(--text-secondary); margin-right:0.35rem;"></i> ${complaint.phone_number}</p>
+                </div>
+                <div>
+                    <h4 style="font-size:0.75rem; text-transform:uppercase; color:var(--accent-light); margin-bottom:0.4rem; letter-spacing:0.05em; font-family:'Outfit';">AI Assessment</h4>
+                    <p style="font-weight:600;"><span class="badge ${complaint.urgency_level.toLowerCase()}">Score ${complaint.priority_score} - ${complaint.urgency_level}</span></p>
+                    <p style="color:var(--accent-color); font-weight:600; font-size:0.85rem; margin-top:0.35rem;"><i class="fas fa-tag" style="margin-right:0.35rem;"></i> ${complaint.predicted_category}</p>
+                </div>
+            </div>
+            
+            <div style="margin-bottom:1.5rem;">
+                <h4 style="font-size:0.75rem; text-transform:uppercase; color:var(--text-secondary); margin-bottom:0.5rem; letter-spacing:0.05em; font-family:'Outfit';">Grievance Location Tree</h4>
+                <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+                    <span class="badge info" style="background:rgba(56, 189, 248, 0.08); color:var(--info); border:1px solid rgba(56, 189, 248, 0.2); font-size:0.75rem; border-radius:6px;"><i class="fas fa-map-marker-alt"></i> District: ${complaint.district || '-'}</span>
+                    <span class="badge info" style="background:rgba(124, 58, 237, 0.08); color:#a78bfa; border:1px solid rgba(124, 58, 237, 0.2); font-size:0.75rem; border-radius:6px;"><i class="fas fa-city"></i> City/Town: ${complaint.city || '-'}</span>
+                    <span class="badge info" style="background:rgba(223, 161, 45, 0.08); color:var(--accent-color); border:1px solid rgba(223, 161, 45, 0.2); font-size:0.75rem; border-radius:6px;"><i class="fas fa-road"></i> Specific: ${complaint.specific_location || complaint.location || '-'}</span>
+                </div>
+            </div>
+
+            <div style="margin-bottom:1.5rem; background:rgba(5, 13, 26, 0.2); border:1px solid var(--border-color); padding:1.25rem; border-radius:8px; max-height:180px; overflow-y:auto;">
+                <h4 style="font-size:0.75rem; text-transform:uppercase; color:var(--text-secondary); margin-bottom:0.5rem; letter-spacing:0.05em; font-family:'Outfit';">Grievance Description</h4>
+                <p style="color:var(--text-primary); font-size:0.92rem; white-space:pre-wrap; line-height:1.5;">${complaint.description}</p>
+            </div>
+
+            <div style="margin-bottom:1.5rem;">
+                <h4 style="font-size:0.75rem; text-transform:uppercase; color:var(--text-secondary); margin-bottom:0.5rem; letter-spacing:0.05em; font-family:'Outfit';">Uploaded Evidence</h4>
+                <div style="background:rgba(5, 13, 26, 0.15); border:1px dashed var(--border-color); padding:1.25rem; border-radius:8px; display:flex; align-items:center; justify-content:center; min-height:100px;">
+                    ${evidenceMarkup}
+                </div>
+            </div>
+            
+            <hr style="border:0; border-top:1px solid var(--border-color); margin:1.5rem 0;" />
+        `;
+    }
     
     modal.classList.remove('hidden');
 }
@@ -425,7 +810,7 @@ if (actionForm) {
 function exportToCSV() {
     if(allComplaints.length === 0) return;
     
-    const headers = ['Ticket ID', 'Citizen Name', 'Phone', 'District', 'Location', 'Category', 'Urgency', 'Priority Score', 'Status', 'Date'];
+    const headers = ['Ticket ID', 'Citizen Name', 'Phone', 'District', 'City/Town', 'Specific Location', 'Category', 'Urgency', 'Priority Score', 'Status', 'Date'];
     
     const csvRows = [];
     csvRows.push(headers.join(','));
@@ -435,9 +820,10 @@ function exportToCSV() {
             c.ticket_id,
             `"${c.citizen_name}"`,
             c.phone_number,
-            `"${c.district}"`,
-            `"${c.location}"`,
-            c.predicted_category,
+            `"${c.district || ''}"`,
+            `"${c.city || ''}"`,
+            `"${c.specific_location || c.location || ''}"`,
+            `"${c.predicted_category || ''}"`,
             c.urgency_level,
             c.priority_score,
             c.status,
