@@ -1041,14 +1041,14 @@ p {
 }
 
 .data-table th {
-    background: rgba(5, 13, 26, 0.4);
-    color: var(--accent-light);
+    background: rgba(12, 26, 48, 0.9);
+    color: var(--text-primary);
     font-family: 'Outfit', sans-serif;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 0.05em;
-    border-bottom: 2px solid var(--border-color);
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    border-bottom: 2px solid var(--accent-color);
 }
 
 .data-table tr {
