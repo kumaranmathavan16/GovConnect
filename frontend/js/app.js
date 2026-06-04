@@ -110,7 +110,7 @@ if (logoutBtn) {
     logoutBtn.addEventListener('click', (e) => {
         e.preventDefault();
         sessionStorage.removeItem('admin_id');
-        window.location.href = 'login.html';
+        window.location.href = '../../index.html';
     });
 }
 
@@ -362,12 +362,23 @@ async function loadCharts() {
 
 // --- Complaints List ---
 let allComplaints = [];
+let allGroupedComplaints = [];
+let groupedMode = false;
+let complaintsFiltersInitialized = false;
 
 async function loadComplaints() {
     try {
-        const response = await fetch(`${API_BASE}/complaints`);
-        allComplaints = await response.json();
-        renderComplaints(allComplaints);
+        const url = groupedMode ? `${API_BASE}/complaints/grouped` : `${API_BASE}/complaints`;
+        const response = await fetch(url);
+        const fetchedData = await response.json();
+        
+        if (groupedMode) {
+            allGroupedComplaints = fetchedData;
+        } else {
+            allComplaints = fetchedData;
+        }
+        
+        filterAndRenderComplaints();
         
         // Setup filters
         const searchBox = document.getElementById('searchBox');
@@ -377,82 +388,113 @@ async function loadComplaints() {
         const filterCategory = document.getElementById('filterCategory');
         const filterStatus = document.getElementById('filterStatus');
         
-        // Populate districts in filters dynamically
-        if (filterDistrict) {
-            filterDistrict.innerHTML = '<option value="">All Districts</option>';
-            Object.keys(TAMIL_NADU_LOCATIONS).sort().forEach(dist => {
-                const opt = document.createElement('option');
-                opt.value = dist;
-                opt.textContent = dist;
-                filterDistrict.appendChild(opt);
-            });
+        if (!complaintsFiltersInitialized) {
+            // Populate districts in filters dynamically
+            if (filterDistrict) {
+                filterDistrict.innerHTML = '<option value="">All Districts</option>';
+                Object.keys(TAMIL_NADU_LOCATIONS).sort().forEach(dist => {
+                    const opt = document.createElement('option');
+                    opt.value = dist;
+                    opt.textContent = dist;
+                    filterDistrict.appendChild(opt);
+                });
+                
+                filterDistrict.addEventListener('change', () => {
+                    const dist = filterDistrict.value;
+                    if (filterCity) {
+                        filterCity.innerHTML = '<option value="">All Cities/Towns</option>';
+                        if (dist && TAMIL_NADU_LOCATIONS[dist]) {
+                            filterCity.disabled = false;
+                            TAMIL_NADU_LOCATIONS[dist].forEach(city => {
+                                const opt = document.createElement('option');
+                                opt.value = city;
+                                opt.textContent = city;
+                                filterCity.appendChild(opt);
+                            });
+                        } else {
+                            filterCity.disabled = true;
+                        }
+                    }
+                    filterAndRenderComplaints();
+                });
+            }
             
-            filterDistrict.addEventListener('change', () => {
-                const dist = filterDistrict.value;
-                if (filterCity) {
-                    filterCity.innerHTML = '<option value="">All Cities/Towns</option>';
-                    if (dist && TAMIL_NADU_LOCATIONS[dist]) {
-                        filterCity.disabled = false;
-                        TAMIL_NADU_LOCATIONS[dist].forEach(city => {
-                            const opt = document.createElement('option');
-                            opt.value = city;
-                            opt.textContent = city;
-                            filterCity.appendChild(opt);
-                        });
-                    } else {
+            if (searchBox) searchBox.addEventListener('input', filterAndRenderComplaints);
+            if (filterCity) filterCity.addEventListener('change', filterAndRenderComplaints);
+            if (filterUrgency) filterUrgency.addEventListener('change', filterAndRenderComplaints);
+            if (filterCategory) filterCategory.addEventListener('change', filterAndRenderComplaints);
+            if (filterStatus) filterStatus.addEventListener('change', filterAndRenderComplaints);
+            
+            const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+            if (clearFiltersBtn) {
+                clearFiltersBtn.addEventListener('click', () => {
+                    if (searchBox) searchBox.value = '';
+                    if (filterDistrict) filterDistrict.value = '';
+                    if (filterCity) {
+                        filterCity.innerHTML = '<option value="">All Cities/Towns</option>';
                         filterCity.disabled = true;
                     }
-                }
-                filterData();
-            });
-        }
-        
-        const filterData = () => {
-            const searchTerm = searchBox ? searchBox.value.toLowerCase() : '';
-            const district = filterDistrict ? filterDistrict.value : '';
-            const city = filterCity ? filterCity.value : '';
-            const urgency = filterUrgency ? filterUrgency.value : '';
-            const category = filterCategory ? filterCategory.value : '';
-            const status = filterStatus ? filterStatus.value : '';
-            
-            const filtered = allComplaints.filter(c => {
-                const matchSearch = c.ticket_id.toLowerCase().includes(searchTerm) || 
-                                    c.citizen_name.toLowerCase().includes(searchTerm) ||
-                                    (c.description || '').toLowerCase().includes(searchTerm);
-                const matchDist = district ? c.district === district : true;
-                const matchCity = city ? c.city === city : true;
-                const matchUrgency = urgency ? c.urgency_level === urgency : true;
-                const matchCategory = category ? (c.predicted_category || '').includes(category) : true;
-                const matchStatus = status ? c.status === status : true;
-                return matchSearch && matchDist && matchCity && matchUrgency && matchCategory && matchStatus;
-            });
-            renderComplaints(filtered);
-        };
-        
-        if(searchBox) searchBox.addEventListener('input', filterData);
-        if(filterCity) filterCity.addEventListener('change', filterData);
-        if(filterUrgency) filterUrgency.addEventListener('change', filterData);
-        if(filterCategory) filterCategory.addEventListener('change', filterData);
-        if(filterStatus) filterStatus.addEventListener('change', filterData);
-        
-        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
-        if (clearFiltersBtn) {
-            clearFiltersBtn.addEventListener('click', () => {
-                if (searchBox) searchBox.value = '';
-                if (filterDistrict) filterDistrict.value = '';
-                if (filterCity) {
-                    filterCity.innerHTML = '<option value="">All Cities/Towns</option>';
-                    filterCity.disabled = true;
-                }
-                if (filterUrgency) filterUrgency.value = '';
-                if (filterCategory) filterCategory.value = '';
-                if (filterStatus) filterStatus.value = '';
-                filterData();
-            });
+                    if (filterUrgency) filterUrgency.value = '';
+                    if (filterCategory) filterCategory.value = '';
+                    if (filterStatus) filterStatus.value = '';
+                    filterAndRenderComplaints();
+                });
+            }
+            complaintsFiltersInitialized = true;
         }
         
     } catch (error) {
         console.error('Error loading complaints:', error);
+    }
+}
+
+function filterAndRenderComplaints() {
+    const searchBox = document.getElementById('searchBox');
+    const filterDistrict = document.getElementById('filterDistrict');
+    const filterCity = document.getElementById('filterCity');
+    const filterUrgency = document.getElementById('filterUrgency');
+    const filterCategory = document.getElementById('filterCategory');
+    const filterStatus = document.getElementById('filterStatus');
+    
+    const searchTerm = searchBox ? searchBox.value.toLowerCase() : '';
+    const district = filterDistrict ? filterDistrict.value : '';
+    const city = filterCity ? filterCity.value : '';
+    const urgency = filterUrgency ? filterUrgency.value : '';
+    const category = filterCategory ? filterCategory.value : '';
+    const status = filterStatus ? filterStatus.value : '';
+    
+    if (groupedMode) {
+        const filtered = allGroupedComplaints.filter(g => g.total_complaints >= 2).filter(g => {
+            const matchSearch = (g.district || '').toLowerCase().includes(searchTerm) || 
+                                (g.city || '').toLowerCase().includes(searchTerm) ||
+                                (g.location || '').toLowerCase().includes(searchTerm) ||
+                                (g.predicted_category || '').toLowerCase().includes(searchTerm) ||
+                                g.complaints.some(c => 
+                                    c.ticket_id.toLowerCase().includes(searchTerm) || 
+                                    c.citizen_name.toLowerCase().includes(searchTerm) || 
+                                    (c.description || '').toLowerCase().includes(searchTerm)
+                                );
+            const matchDist = district ? g.district === district : true;
+            const matchCity = city ? g.city === city : true;
+            const matchCategory = category ? (g.predicted_category || '').includes(category) : true;
+            const matchStatus = status ? g.status === status : true;
+            const matchUrgency = urgency ? g.complaints.some(c => c.urgency_level === urgency) : true;
+            return matchSearch && matchDist && matchCity && matchCategory && matchStatus && matchUrgency;
+        });
+        renderGroupedComplaints(filtered);
+    } else {
+        const filtered = allComplaints.filter(c => {
+            const matchSearch = c.ticket_id.toLowerCase().includes(searchTerm) || 
+                                c.citizen_name.toLowerCase().includes(searchTerm) ||
+                                (c.description || '').toLowerCase().includes(searchTerm);
+            const matchDist = district ? c.district === district : true;
+            const matchCity = city ? c.city === city : true;
+            const matchUrgency = urgency ? c.urgency_level === urgency : true;
+            const matchCategory = category ? (c.predicted_category || '').includes(category) : true;
+            const matchStatus = status ? c.status === status : true;
+            return matchSearch && matchDist && matchCity && matchUrgency && matchCategory && matchStatus;
+        });
+        renderComplaints(filtered);
     }
 }
 
@@ -491,6 +533,58 @@ function renderComplaints(data) {
         tbody.appendChild(tr);
     });
 }
+
+function renderGroupedComplaints(data) {
+    const tbody = document.getElementById('complaintsTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center">No complaint groups found.</td></tr>';
+        return;
+    }
+    
+    data.forEach((g, index) => {
+        const tr = document.createElement('tr');
+        
+        const avgScore = g.average_priority_score;
+        let urgencyClass = 'low';
+        if (avgScore >= 86) { urgencyClass = 'critical'; }
+        else if (avgScore >= 61) { urgencyClass = 'high'; }
+        else if (avgScore >= 31) { urgencyClass = 'medium'; }
+        
+        const statusClass = g.status.toLowerCase().replace(' ', '-');
+        const groupKey = `${g.district}_${g.city}_${g.location}_${g.predicted_category}`.replace(/\s+/g, '_');
+        
+        tr.innerHTML = `
+            <td><span class="badge group-badge"><i class="fas fa-layer-group"></i> Group</span></td>
+            <td>
+                <strong>${g.total_complaints} Citizen(s)</strong><br/>
+                <span style="font-size:0.75rem; color:var(--text-secondary);">
+                    ${g.complaints.map(c => c.citizen_name).slice(0, 2).join(', ')}${g.complaints.length > 2 ? '...' : ''}
+                </span>
+            </td>
+            <td>${g.district || '-'}</td>
+            <td>${g.city || '-'}</td>
+            <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${g.location || '-'}">${g.location || '-'}</td>
+            <td>${g.predicted_category}</td>
+            <td>
+                <span class="badge ${urgencyClass}">
+                    Score: ${avgScore}
+                </span>
+            </td>
+            <td><span class="badge ${statusClass}">${g.status}</span></td>
+            <td>
+                <button class="btn-primary" onclick="openGroupActionModal('${groupKey}')" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-radius:4px; font-weight:500;">
+                    Group Action
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
 
 // --- Public Status ---
 let publicComplaints = [];
@@ -639,58 +733,117 @@ function renderPublicComplaintsTable(data) {
     });
 }
 
+let groupedQueueMode = false;
+let allGroupedQueueComplaints = [];
+
 async function loadPriorityQueue() {
     try {
-        const response = await fetch(`${API_BASE}/complaints`);
-        allComplaints = await response.json();
-        
-        // Data is already sorted by priority_score descending from backend
-        // Filter out resolved ones for queue
-        const queueData = allComplaints.filter(c => c.status !== 'Resolved');
+        const url = groupedQueueMode ? `${API_BASE}/complaints/grouped` : `${API_BASE}/complaints`;
+        const response = await fetch(url);
+        const fetchedData = await response.json();
         
         const container = document.getElementById('priorityQueueContainer');
         if (!container) return;
         
         container.innerHTML = '';
         
-        if (queueData.length === 0) {
-            container.innerHTML = '<p style="text-align:center; padding:2rem; color:var(--text-secondary);">No pending complaints in the queue.</p>';
-            return;
+        if (groupedQueueMode) {
+            allGroupedQueueComplaints = fetchedData;
+            // Filter out groups where status is Resolved, showing only groups with multiple complaints
+            const pendingGroups = allGroupedQueueComplaints.filter(g => g.status !== 'Resolved' && g.total_complaints >= 2);
+            
+            if (pendingGroups.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding:2rem; color:var(--text-secondary);">No pending complaints in the queue.</p>';
+                return;
+            }
+            
+            pendingGroups.forEach(g => {
+                const avgScore = g.average_priority_score;
+                let urgencyClass = 'low';
+                if (avgScore >= 86) { urgencyClass = 'critical'; }
+                else if (avgScore >= 61) { urgencyClass = 'high'; }
+                else if (avgScore >= 31) { urgencyClass = 'medium'; }
+                
+                const groupKey = `${g.district}_${g.city}_${g.location}_${g.predicted_category}`.replace(/\s+/g, '_');
+                
+                const card = document.createElement('div');
+                card.className = `queue-card ${urgencyClass}`;
+                
+                const dates = g.complaints.map(c => new Date(c.created_at).getTime());
+                const latestDate = new Date(Math.max(...dates)).toLocaleString();
+                
+                card.innerHTML = `
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span class="badge group-badge"><i class="fas fa-layer-group"></i> Group of ${g.total_complaints} Complaint(s)</span>
+                            <span class="badge ${urgencyClass}">Average Score: ${avgScore}</span>
+                        </div>
+                        <h3 style="margin-bottom: 0.6rem; font-size: 1.2rem; font-weight: 600; font-family: 'Outfit', sans-serif; color: var(--accent-light);">${g.predicted_category}</h3>
+                        
+                        <div class="location-trail" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem;">
+                            <span class="badge info" style="background:#e0f2fe; color:#0369a1; font-size:0.75rem;"><i class="fas fa-map-marker-alt"></i> District: ${g.district || '-'}</span>
+                            <span class="badge info" style="background:#f3e8ff; color:#6b21a8; font-size:0.75rem;"><i class="fas fa-city"></i> City/Town: ${g.city || '-'}</span>
+                            <span class="badge info" style="background:#fef3c7; color:#92400e; font-size:0.75rem;"><i class="fas fa-road"></i> Specific: ${g.location || '-'}</span>
+                        </div>
+                        
+                        <div style="margin-bottom: 0.6rem; border-left: 2px solid var(--border-color); padding-left: 1rem;">
+                            <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; font-style: italic;">
+                                "${g.complaints[0].description}" ${g.total_complaints > 1 ? `and ${g.total_complaints - 1} other description(s)...` : ''}
+                            </p>
+                        </div>
+                        
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">
+                            Submissions from: ${g.complaints.map(c => c.citizen_name).join(', ')} | Latest: ${latestDate}
+                        </div>
+                    </div>
+                    <div style="margin-left: 2rem; display:flex; align-items:center;">
+                        <button class="btn-primary" onclick="openGroupActionModal('${groupKey}')" style="border-radius:4px; white-space:nowrap;">Group Action</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        } else {
+            allComplaints = fetchedData;
+            const queueData = allComplaints.filter(c => c.status !== 'Resolved');
+            
+            if (queueData.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding:2rem; color:var(--text-secondary);">No pending complaints in the queue.</p>';
+                return;
+            }
+            
+            queueData.forEach(c => {
+                const urgencyClass = c.urgency_level.toLowerCase();
+                const date = new Date(c.created_at).toLocaleString();
+                
+                const card = document.createElement('div');
+                card.className = `queue-card ${urgencyClass}`;
+                
+                card.innerHTML = `
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <strong>${c.ticket_id}</strong>
+                            <span class="badge ${urgencyClass}">Score: ${c.priority_score} - ${c.urgency_level}</span>
+                        </div>
+                        <h3 style="margin-bottom: 0.6rem; font-size: 1.2rem; font-weight: 600; font-family: 'Outfit', sans-serif; color: var(--accent-light);">${c.predicted_category}</h3>
+                        
+                        <div class="location-trail" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem;">
+                            <span class="badge info" style="background:#e0f2fe; color:#0369a1; font-size:0.75rem;"><i class="fas fa-map-marker-alt"></i> District: ${c.district || '-'}</span>
+                            <span class="badge info" style="background:#f3e8ff; color:#6b21a8; font-size:0.75rem;"><i class="fas fa-city"></i> City/Town: ${c.city || '-'}</span>
+                            <span class="badge info" style="background:#fef3c7; color:#92400e; font-size:0.75rem;"><i class="fas fa-road"></i> Specific: ${c.specific_location || c.location || '-'}</span>
+                        </div>
+                        
+                        <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 0.6rem; line-height: 1.5;">${c.description}</p>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">
+                            Submitted by ${c.citizen_name} on ${date} | Status: ${c.status}
+                        </div>
+                    </div>
+                    <div style="margin-left: 2rem; display:flex; align-items:center;">
+                        <button class="btn-primary" onclick="openActionModal('${c.ticket_id}')" style="border-radius:4px; white-space:nowrap;">Take Action</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
         }
-        
-        queueData.forEach(c => {
-            const urgencyClass = c.urgency_level.toLowerCase();
-            const date = new Date(c.created_at).toLocaleString();
-            
-            const card = document.createElement('div');
-            card.className = `queue-card ${urgencyClass}`;
-            
-            card.innerHTML = `
-                <div style="flex: 1;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <strong>${c.ticket_id}</strong>
-                        <span class="badge ${urgencyClass}">Score: ${c.priority_score} - ${c.urgency_level}</span>
-                    </div>
-                    <h3 style="margin-bottom: 0.6rem; font-size: 1.2rem; font-weight: 600; font-family: 'Outfit', sans-serif; color: var(--accent-light);">${c.predicted_category}</h3>
-                    
-                    <div class="location-trail" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem;">
-                        <span class="badge info" style="background:#e0f2fe; color:#0369a1; font-size:0.75rem;"><i class="fas fa-map-marker-alt"></i> District: ${c.district || '-'}</span>
-                        <span class="badge info" style="background:#f3e8ff; color:#6b21a8; font-size:0.75rem;"><i class="fas fa-city"></i> City/Town: ${c.city || '-'}</span>
-                        <span class="badge info" style="background:#fef3c7; color:#92400e; font-size:0.75rem;"><i class="fas fa-road"></i> Specific: ${c.specific_location || c.location || '-'}</span>
-                    </div>
-                    
-                    <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 0.6rem; line-height: 1.5;">${c.description}</p>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">
-                        Submitted by ${c.citizen_name} on ${date} | Status: ${c.status}
-                    </div>
-                </div>
-                <div style="margin-left: 2rem; display:flex; align-items:center;">
-                    <button class="btn-primary" onclick="openActionModal('${c.ticket_id}')" style="border-radius:4px; white-space:nowrap;">Take Action</button>
-                </div>
-            `;
-            container.appendChild(card);
-        });
-        
     } catch (error) {
         console.error('Error loading queue:', error);
     }
@@ -701,7 +854,10 @@ const modal = document.getElementById('actionModal');
 const closeBtn = document.querySelector('.close-modal');
 const actionForm = document.getElementById('actionForm');
 
+let currentActionIsGroup = false;
+
 function openActionModal(ticketId) {
+    currentActionIsGroup = false;
     const complaint = allComplaints.find(c => c.ticket_id === ticketId);
     if (!complaint) return;
 
@@ -761,6 +917,75 @@ function openActionModal(ticketId) {
     modal.classList.remove('hidden');
 }
 
+function openGroupActionModal(groupKey) {
+    currentActionIsGroup = true;
+    
+    // Find in whichever active group list is populated
+    const listToSearch = window.location.pathname.includes('queue.html') ? allGroupedQueueComplaints : allGroupedComplaints;
+    const group = listToSearch.find(g => {
+        const key = `${g.district}_${g.city}_${g.location}_${g.predicted_category}`.replace(/\s+/g, '_');
+        return key === groupKey;
+    });
+    if (!group) return;
+
+    document.getElementById('modalTicketId').innerHTML = `<span class="badge group-badge"><i class="fas fa-layer-group"></i> Group of ${group.total_complaints} Complaints</span>`;
+    
+    const ticketIds = group.complaints.map(c => c.ticket_id).join(',');
+    document.getElementById('actionTicketId').value = ticketIds;
+    document.getElementById('updateStatus').value = group.status;
+    document.getElementById('actionNotes').value = '';
+    
+    // Inject detailed information into the modal
+    const detailsContainer = document.getElementById('modalComplaintDetails');
+    if (detailsContainer) {
+        let complaintsHtml = '';
+        group.complaints.forEach(c => {
+            const date = new Date(c.created_at).toLocaleString();
+            const evidenceMarkup = c.evidence_path ? 
+                (c.evidence_path.endsWith('.pdf') ? 
+                    `<div class="modal-evidence-section" style="margin-top:0.5rem;"><a href="${API_BASE.replace('/api', '')}${c.evidence_path}" target="_blank" class="btn-outline" style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.4rem 0.8rem; font-size:0.8rem; border-radius:6px; text-decoration:none;"><i class="fas fa-file-pdf" style="color:var(--danger);"></i> View PDF</a></div>` :
+                    `<div class="modal-evidence-section" style="display:flex; align-items:center; gap:10px; margin-top:0.5rem;"><strong>Evidence:</strong> <img src="${API_BASE.replace('/api', '')}${c.evidence_path}" style="max-height:80px; border-radius:4px; border:1px solid var(--border-color); cursor:pointer;" onclick="window.open(this.src)"></div>`
+                ) : '';
+
+            complaintsHtml += `
+                <div class="modal-complaint-item" style="margin-bottom:0.75rem;">
+                    <div class="modal-complaint-header">
+                        <strong style="color:var(--accent-light);">${c.ticket_id}</strong>
+                        <span class="badge ${c.urgency_level.toLowerCase()}" style="font-size:0.7rem; padding:0.15rem 0.5rem;">Score: ${c.priority_score} - ${c.urgency_level}</span>
+                    </div>
+                    <div style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.4rem;">
+                        Submitted by <strong>${c.citizen_name}</strong> (${c.phone_number}) on ${date} | Status: <span class="badge ${c.status.toLowerCase().replace(' ', '-')}" style="font-size:0.7rem; padding:0.15rem 0.5rem;">${c.status}</span>
+                    </div>
+                    <div class="modal-complaint-body">${c.description}</div>
+                    ${evidenceMarkup}
+                </div>
+            `;
+        });
+
+        detailsContainer.innerHTML = `
+            <div style="display:grid; grid-template-columns:1fr; gap:1.25rem; background:rgba(5, 13, 26, 0.4); border:1px solid rgba(255,255,255,0.06); padding:1.25rem; border-radius:10px; border-left:4px solid var(--accent-color); margin-bottom:1.5rem;">
+                <div>
+                    <h4 style="font-size:0.75rem; text-transform:uppercase; color:var(--accent-light); margin-bottom:0.4rem; letter-spacing:0.05em; font-family:'Outfit';">Group Information</h4>
+                    <p style="font-weight:600; color:var(--text-primary); font-size:0.95rem;"><i class="fas fa-map-marker-alt" style="color:var(--accent-color); margin-right:0.35rem;"></i> ${group.location || '-'}, ${group.city || '-'}, ${group.district || '-'} Dist</p>
+                    <p style="color:var(--accent-color); font-weight:600; font-size:0.85rem; margin-top:0.35rem;"><i class="fas fa-tag" style="margin-right:0.35rem;"></i> Department: ${group.predicted_category}</p>
+                    <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.35rem;"><i class="fas fa-calculator" style="margin-right:0.35rem;"></i> Average Priority Score: <strong style="color:var(--text-primary);">${group.average_priority_score}</strong></p>
+                </div>
+            </div>
+            
+            <div style="margin-bottom:1.5rem;">
+                <h4 style="font-size:0.75rem; text-transform:uppercase; color:var(--text-secondary); margin-bottom:0.5rem; letter-spacing:0.05em; font-family:'Outfit';">Grievances in Group (${group.total_complaints})</h4>
+                <div class="modal-complaints-list">
+                    ${complaintsHtml}
+                </div>
+            </div>
+            <hr style="border:0; border-top:1px solid var(--border-color); margin:1.5rem 0;" />
+        `;
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+
 if (closeBtn) {
     closeBtn.addEventListener('click', () => {
         modal.classList.add('hidden');
@@ -779,12 +1004,20 @@ if (actionForm) {
     actionForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const ticketId = document.getElementById('actionTicketId').value;
+        const ticketIdVal = document.getElementById('actionTicketId').value;
         const formData = new FormData(actionForm);
         formData.append('admin_id', sessionStorage.getItem('admin_id'));
         
+        let url;
+        if (currentActionIsGroup) {
+            url = `${API_BASE}/complaints/grouped/action`;
+            formData.append('ticket_ids', ticketIdVal);
+        } else {
+            url = `${API_BASE}/complaints/${ticketIdVal}/action`;
+        }
+        
         try {
-            const response = await fetch(`${API_BASE}/complaints/${ticketId}/action`, {
+            const response = await fetch(url, {
                 method: 'POST',
                 body: formData
             });
@@ -798,7 +1031,8 @@ if (actionForm) {
                     loadPriorityQueue();
                 }
             } else {
-                alert('Failed to update status');
+                const errData = await response.json();
+                alert('Failed to update status: ' + (errData.detail || 'Unknown error'));
             }
         } catch (error) {
             console.error('Error:', error);
@@ -806,6 +1040,18 @@ if (actionForm) {
         }
     });
 }
+
+window.openActionModal = openActionModal;
+window.openGroupActionModal = openGroupActionModal;
+window.toggleGroupedMode = function(isGrouped) {
+    groupedMode = isGrouped;
+    loadComplaints();
+};
+window.toggleGroupedQueueMode = function(isGrouped) {
+    groupedQueueMode = isGrouped;
+    loadPriorityQueue();
+};
+
 
 function exportToCSV() {
     if(allComplaints.length === 0) return;

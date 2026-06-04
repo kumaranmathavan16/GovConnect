@@ -36,6 +36,13 @@
             </div>
         </header>
 
+        <div style="display:flex; justify-content:flex-end; margin-bottom:1.5rem;">
+            <div class="view-toggle">
+                <button class="btn-toggle active" id="btnViewIndividual" onclick="setViewMode(false)"><i class="fas fa-user"></i> Individual</button>
+                <button class="btn-toggle" id="btnViewGrouped" onclick="setViewMode(true)"><i class="fas fa-layer-group"></i> Grouped</button>
+            </div>
+        </div>
+
         <div class="queue-container" id="priorityQueueContainer">
             <!-- Cards injected via JS -->
         </div>
@@ -78,6 +85,12 @@
         document.addEventListener("DOMContentLoaded", () => {
             loadPriorityQueue();
         });
+        
+        function setViewMode(isGrouped) {
+            document.getElementById('btnViewIndividual').classList.toggle('active', !isGrouped);
+            document.getElementById('btnViewGrouped').classList.toggle('active', isGrouped);
+            window.toggleGroupedQueueMode(isGrouped);
+        }
     </script>
 </body>
 </html>

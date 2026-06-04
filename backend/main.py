@@ -111,6 +111,67 @@ def get_complaints(db: Session = Depends(get_db)):
     complaints = db.query(models.Complaint).order_by(models.Complaint.priority_score.desc()).all()
     return complaints
 
+@app.get("/api/complaints/grouped")
+def get_grouped_complaints(db: Session = Depends(get_db)):
+    from collections import defaultdict
+    complaints = db.query(models.Complaint).all()
+    
+    groups = defaultdict(list)
+    for c in complaints:
+        dist = (c.district or "").strip()
+        city = (c.city or "").strip()
+        loc = (c.specific_location or c.location or "").strip()
+        dept = (c.predicted_category or "").strip()
+        
+        # Key is case-insensitive normalized tuple for grouping
+        key = (dist.lower(), city.lower(), loc.lower(), dept.lower())
+        groups[key].append(c)
+        
+    grouped_list = []
+    for key, item_list in groups.items():
+        first = item_list[0]
+        avg_score = round(sum(c.priority_score for c in item_list) / len(item_list), 2)
+        
+        # Aggregate status:
+        # If all resolved -> Resolved
+        # If any in progress -> In Progress
+        # Else -> Pending
+        statuses = [c.status.value if hasattr(c.status, 'value') else str(c.status) for c in item_list]
+        if all(s == "Resolved" for s in statuses):
+            agg_status = "Resolved"
+        elif any(s == "In Progress" for s in statuses):
+            agg_status = "In Progress"
+        else:
+            agg_status = "Pending"
+            
+        grouped_list.append({
+            "district": first.district,
+            "city": first.city,
+            "location": first.specific_location or first.location,
+            "predicted_category": first.predicted_category,
+            "average_priority_score": avg_score,
+            "status": agg_status,
+            "total_complaints": len(item_list),
+            "complaints": [
+                {
+                    "ticket_id": c.ticket_id,
+                    "citizen_name": c.citizen_name,
+                    "phone_number": c.phone_number,
+                    "description": c.description,
+                    "urgency_level": c.urgency_level,
+                    "priority_score": c.priority_score,
+                    "status": c.status.value if hasattr(c.status, 'value') else str(c.status),
+                    "created_at": c.created_at.isoformat() if c.created_at else None,
+                    "evidence_path": c.evidence_path
+                } for c in item_list
+            ]
+        })
+        
+    # Sort groups by average_priority_score descending
+    grouped_list.sort(key=lambda x: x["average_priority_score"], reverse=True)
+    return grouped_list
+
+
 @app.get("/api/dashboard/stats")
 def get_dashboard_stats(db: Session = Depends(get_db)):
     total = db.query(models.Complaint).count()
@@ -160,6 +221,35 @@ def get_trend_analytics(db: Session = Depends(get_db)):
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"]
     return [{"month": m, "count": random.randint(10, 100)} for m in months]
 
+@app.post("/api/complaints/grouped/action")
+def take_grouped_action(
+    ticket_ids: str = Form(...),  # Comma-separated string of ticket IDs
+    action_notes: str = Form(...),
+    status: str = Form(...),
+    admin_id: int = Form(...),
+    db: Session = Depends(get_db)
+):
+    ids = [tid.strip() for tid in ticket_ids.split(",") if tid.strip()]
+    if not ids:
+        raise HTTPException(status_code=400, detail="No ticket IDs provided")
+        
+    complaints = db.query(models.Complaint).filter(models.Complaint.ticket_id.in_(ids)).all()
+    if not complaints:
+        raise HTTPException(status_code=404, detail="No complaints found for the provided IDs")
+        
+    for complaint in complaints:
+        complaint.status = models.ComplaintStatus(status)
+        action = models.ActionTaken(
+            ticket_id=complaint.ticket_id,
+            admin_id=admin_id,
+            action_notes=action_notes,
+            updated_status=models.ComplaintStatus(status)
+        )
+        db.add(action)
+        
+    db.commit()
+    return {"status": "success", "updated_count": len(complaints)}
+
 @app.post("/api/complaints/{ticket_id}/action")
 def take_action(
     ticket_id: str,
@@ -185,6 +275,7 @@ def take_action(
     db.commit()
     
     return {"status": "success"}
+
 
 if __name__ == "__main__":
     import uvicorn

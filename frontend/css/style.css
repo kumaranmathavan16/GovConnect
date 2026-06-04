@@ -1388,3 +1388,89 @@ p {
         width: 100%;
     }
 }
+
+/* Grouped Grievance Custom Styles */
+.view-toggle {
+    display: inline-flex;
+    background: rgba(5, 13, 26, 0.4);
+    border: 1px solid var(--border-color);
+    padding: 0.25rem;
+    border-radius: 8px;
+    gap: 0.25rem;
+    margin-right: auto;
+}
+
+.btn-toggle {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.5rem 1.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.btn-toggle:hover {
+    color: var(--text-primary);
+}
+
+.btn-toggle.active {
+    background: linear-gradient(135deg, var(--accent-color), var(--accent-dark));
+    color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(223, 161, 45, 0.2);
+}
+
+.group-badge {
+    background: rgba(223, 161, 45, 0.12) !important;
+    color: var(--accent-light) !important;
+    border: 1px solid var(--border-hover) !important;
+}
+
+.modal-complaints-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    max-height: 350px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.modal-complaint-item {
+    background: rgba(5, 13, 26, 0.3);
+    border: 1px solid var(--border-color);
+    padding: 1rem;
+    border-radius: 8px;
+    transition: var(--transition-fast);
+}
+
+.modal-complaint-item:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(5, 13, 26, 0.5);
+}
+
+.modal-complaint-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    padding-bottom: 0.4rem;
+}
+
+.modal-complaint-body {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.modal-evidence-section {
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed rgba(255, 255, 255, 0.04);
+}
+

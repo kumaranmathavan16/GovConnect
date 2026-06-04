@@ -36,8 +36,11 @@
             </div>
         </header>
 
-        <div class="table-container">
-            <div class="table-controls" style="display:flex; flex-wrap:wrap; gap:0.75rem;">
+            <div class="table-controls" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center;">
+                <div class="view-toggle">
+                    <button class="btn-toggle active" id="btnViewIndividual" onclick="setViewMode(false)"><i class="fas fa-user"></i> Individual</button>
+                    <button class="btn-toggle" id="btnViewGrouped" onclick="setViewMode(true)"><i class="fas fa-layer-group"></i> Grouped</button>
+                </div>
                 <input type="text" id="searchBox" placeholder="Search by Ticket, Name or Keyword..." class="search-input" style="flex:1; min-width:200px;">
                 <select id="filterDistrict" class="filter-select">
                     <option value="">All Districts</option>
@@ -137,6 +140,12 @@
         document.addEventListener("DOMContentLoaded", () => {
             loadComplaints();
         });
+        
+        function setViewMode(isGrouped) {
+            document.getElementById('btnViewIndividual').classList.toggle('active', !isGrouped);
+            document.getElementById('btnViewGrouped').classList.toggle('active', isGrouped);
+            window.toggleGroupedMode(isGrouped);
+        }
     </script>
 </body>
 </html>
