@@ -954,13 +954,24 @@ p {
     font-size: 1.15rem;
     margin-bottom: 1.5rem;
     font-family: 'Outfit', sans-serif;
-    color: var(--accent-light);
+    color: #ffffff !important;
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 0.5rem;
 }
 
+.chart-wrapper {
+    position: relative;
+    height: 250px;
+    width: 100%;
+}
+
+.chart-box.full-width .chart-wrapper {
+    height: 290px;
+}
+
 .chart-box canvas {
-    max-height: 290px !important;
+    width: 100% !important;
+    height: 100% !important;
 }
 
 .chart-box.full-width {
@@ -1149,6 +1160,10 @@ p {
 .queue-card.high { border-left-color: var(--warning); background: rgba(245, 158, 11, 0.02); }
 .queue-card.medium { border-left-color: var(--info); }
 .queue-card.low { border-left-color: var(--success); }
+
+.queue-card-category {
+    color: #f5cf6e !important;
+}
 
 /* Glassmorphic Modals */
 .modal {
